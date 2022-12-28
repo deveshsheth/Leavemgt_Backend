@@ -63,7 +63,7 @@ exports.GetUserById = async (req, res) => {
 exports.userUpdate = async (req, res) => {
 
     try {
-        const userid = parseInt(req.params.userid)
+        const userid= parseInt(req.body.userid);
         const password = await bcrypt.hash(req.body.password, 10);
         const { fullname, phoneno, birthdate, gender, email, address, cityid, pincode, roleid, status, departmentid } = req.body;
 
@@ -73,6 +73,25 @@ exports.userUpdate = async (req, res) => {
                 throw error;
             } else {
                 res.status(200).json(success("user Updated sucesffuly", { fullname, phoneno, birthdate, gender, email, password, address, cityid, pincode, roleid, status, departmentid,userid }, res.statusCode));
+            }
+        })
+    } catch (error) {
+        return error;
+    }
+}
+
+//? Delete User by id
+exports.deleteUser = async (req, res) => {
+
+    try {
+        const userid = parseInt(req.params.userid)
+
+        pg.query('delete from users where userid = $1', [userid], (error, result) => {
+
+            if (error) {
+                throw error;
+            } else {
+                res.status(200).json(success("user Deleted sucesffuly", { userid }, res.statusCode));
             }
         })
     } catch (error) {

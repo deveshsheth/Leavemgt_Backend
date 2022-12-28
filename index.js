@@ -10,12 +10,14 @@ app.use(
   })
 )
 
-const roleRoutes = require('./routes/role.routes');
-const departmentRoutes = require('./routes/department.routes');
+const roleRoutes = require('./routes/role.routes')
+const departmentRoutes = require('./routes/department.routes')
 const usersRoutes=require('./routes/users.routes')
-app.use('/role',roleRoutes);
-app.use('/department',departmentRoutes);
+const studentRoutes=require('./routes/student.routes')
+app.use('/role',roleRoutes)
+app.use('/department',departmentRoutes)
 app.use('/user', usersRoutes)
+app.use('/student', studentRoutes)
 
 
 app.get('/', (req, res) => {

@@ -1,4 +1,4 @@
-const { success, error, validation } = require("../utils/responses");
+const { success, mistake, validation } = require("../utils/responses");
 const pg = require('../pgdb')
 
 exports.addDepartment = (req, res) => {
@@ -9,7 +9,7 @@ exports.addDepartment = (req, res) => {
         if (error) {
             throw error
         } else {
-            res.status(200).json(success("Department Added", { data: result.rows }, res.status))
+            res.status(200).json(success("Department Added", { departmentname }, res.status))
         }
     })
 
@@ -49,25 +49,23 @@ exports.getDepartmentByID = async (req, res) => {
     }
 }
 
-exports.updateDepartment = (req, res) => {
-
-    const departmentid = parseInt(req.params.departmentid);
-    const { departmentname } = req.body;
-
-    try {
-
-        pg.query('update department set departmentname = $1 where departmentid = $2', [departmentname, departmentid], (error, result) => {
-            if (error) {
-                throw error
-            } else {
-                res.status(200).json(success("Department Updated", { data: result.rows }, res.status))
+exports.updateDepartment=async(req,res)=>{
+    try{
+        const departmentid= parseInt(req.body.departmentid);
+        
+        const{departmentname}=req.body
+        pg.query('update department set departmentname=$1 where departmentid=$2',[departmentname,departmentid],(error,result)=>{
+            if(error){
+                throw error;
+            }else{
+                res.status(200).json(success("Department Updated Successfully",{departmentname,departmentid},res.statusCode));
             }
         })
+    }catch(error){
 
-    } catch (error) {
-        throw error
+        return error;
+
     }
-
 }
 
 exports.deleteDepartment = (req, res) => {
