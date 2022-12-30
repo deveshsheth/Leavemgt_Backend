@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+var cors = require('cors')
 const app = express()
 const port = 3000
 
@@ -9,6 +10,8 @@ app.use(
     extended: true,
   })
 )
+
+app.use(cors())
 
 const roleRoutes = require('./routes/role.routes')
 const departmentRoutes = require('./routes/department.routes')
