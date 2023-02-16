@@ -1,84 +1,82 @@
-const { success, mistake, validation } = require("../utils/responses");
-const responses = require('../utils/responses')
-const pg = require('../pgdb')
+const Role = require('../model/role.model')
+const { validationResult } = require('express-validator/check');
 
-exports.createRole = (req, res) => {
-    const { rolename } = req.body
-
-    pg.query('INSERT INTO role (rolename) VALUES ($1)', [rolename], (error,result) => {
-        if (error) {
-            throw error
+const addRole = (req, res) => {
+    try {
+        const error = validationResult(req);
+        if(!error.isEmpty()){
+            res.json({ msg: error.array()[0].msg })
         }else{
-            res.status(200).json(success("Role Added", { rolename }, res.status))
+            Role.create({
+                rolename: req.body.rolename
+            }).then(role => {
+                res.json({ msg: "Role Created..." })
+            }).catch(err => res.json({ msg: err }))
         }
-       
-    })
-}
-
-exports.getRole = (req, res) => {
-
-    try {
-        pg.query("SELECT * FROM role", (error, result) => {
-            if (error) {
-                throw error
-            } else {
-                res.status(200).json(success("List of role", { data: result.rows }, res.status))
-            }
-        })
-
-    } catch (err) {
-        return err;
-    }
-
-}
-
-exports.getRoleByID = async (req, res) => {
-    try {
-        const roleid = parseInt(req.params.roleid);
-        pg.query('SELECT * FROM role WHERE roleid = $1', [roleid], (err, result) => {
-            if (result.rows.length != 0) {
-                res.status(200).json(success("Role ById", result.rows, res.statusCode))
-            } else {
-                res.status(400).json(mistake("No Data Found", res.statusCode))
-            }
-        })
-    } catch (err) {
-        return err;
-    }
-}
-
-//?update role
-exports.updateRole=async(req,res)=>{
-    try{
-        const roleid= parseInt(req.body.roleid);
         
-        const{rolename}=req.body
-        pg.query('update role set rolename=$1 where roleid=$2',[rolename,roleid],(error,result)=>{
-            if(error){
-                throw error;
-            }else{
-                res.status(200).json(success("Role Updated Successfully",{rolename,roleid},res.statusCode));
-            }
-        })
-    }catch(error){
-
-        return error;
-
+    } catch (err) {
+        throw err;
     }
 }
 
-//?delete role
-exports.deleteRole = async (req, res) => {
-    try {
-        const roleid = parseInt(req.params.roleid);
-        pg.query('delete from role where roleid=$1', [roleid], (error, result) => {
-            if (error) {
-                throw error
-            } else {
-                res.status(200).json(success("role deleted", { roleid }, res.statusCode));
-            }
-        });
-    } catch (error) {
-
+const getRole = (req,res) => {
+    try{
+        Role.findAll().then(roles => {
+            res.send(roles)
+        }).catch(err => {
+            throw err;
+        })
+    } catch(err) {
+        throw err;
     }
+}
+
+const getRoleById = (req,res) => {
+    try{
+        const id = parseInt(req.params.id);
+        console.log("id:",id);
+        Role.findOne({where:{roleid:id}}).then(result => {
+            res.send(result)
+        }).catch(err => {
+            throw err;
+        })
+    }catch(err) {
+        throw err;
+    }
+}
+
+const updateRole = (req, res) => {
+    try{
+        Role.update({
+            rolename:req.body.rolename
+        },{
+            where:{roleid:req.body.roleid}
+        }).then(result => { 
+            res.send(result)
+        }).catch(err => {
+            throw err;
+        })
+    }catch(err) {
+        throw err;
+    }
+}
+
+
+const deleteRole = (req,res) => {
+    try {
+        const id = parseInt(req.params.id);
+        Role.destroy({ where: { roleid: id } }).then(result => {
+          res.send("deleted Successfully !!! ")
+        })
+    } catch (err) {
+        throw err;
+    }
+}
+
+module.exports = {
+    addRole,
+    getRole,
+    getRoleById,
+    updateRole,
+    deleteRole
 }

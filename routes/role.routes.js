@@ -3,10 +3,12 @@ const router = express.Router()
 
 const controller = require('../controllers/role.controller')
 
-router.post('/addRole', controller.createRole)
+const { check } = require('express-validator/check');
+
+router.post('/addRole',check('rolename').not().isEmpty().trim().escape().withMessage("ROle cannot be empty.."), controller.addRole)
 router.get('/getRole',controller.getRole)
-router.get('/getRoleByID/:roleid',controller.getRoleByID)
+router.get('/getRoleById/:id',controller.getRoleById)
 router.put('/updateRole',controller.updateRole)
-router.delete('/deleteRole/:roleid',controller.deleteRole)
+router.delete('/deleteRole/:id',controller.deleteRole)
 
 module.exports = router;

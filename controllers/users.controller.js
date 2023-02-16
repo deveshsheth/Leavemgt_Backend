@@ -1,5 +1,5 @@
 const { success, error, validation } = require("../utils/responses");
-const pg = require('../pgdb')
+const pg = require('../utils/pgdb')
 var bcrypt = require('bcrypt');
 
 //? User Signup
@@ -104,12 +104,12 @@ exports.userLogin = async (req, res) => {
     const users = await pg.query("select * from users where email=$1", [req.body.email])
 
     if (users.rows.length <= 0) {
-        return res.status(404).json(error(users.rows[0].fullname + " Login Successfully", users.rows, res.statusCode))
+        return res.status(401).json(error(users.rows[0].fullname + " Login Successfully", users.rows, res.statusCode))
     } else {
 
         if (await bcrypt.compare(req.body.password, users.rows[0].password)) {
 
-            return res.status(200).json(success(users.rows[0].fullname + " !", users.rows, res.statusCode))
+            return res.status(200).json(success("Welcome " + users.rows[0].fullname + " !", users.rows, res.statusCode))
         } else {
             return res.status(201).json(error(" Wrong Credential", users.rows, res.statusCode))
         }

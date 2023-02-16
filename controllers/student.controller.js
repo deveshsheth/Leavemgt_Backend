@@ -1,6 +1,6 @@
 const { success, mistake, validation } = require("../utils/responses");
 const responses = require('../utils/responses')
-const pg = require('../pgdb')
+const pg = require('../utils/pgdb')
 
 var bcrypt = require('bcrypt');
 
