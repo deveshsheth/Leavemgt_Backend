@@ -18,13 +18,16 @@ const sequelize = require('./utils/pgdb')
 
 
 const roleRoutes = require('./routes/role.routes')
-// const departmentRoutes = require('./routes/department.routes')
+const departmentRoutes = require('./routes/department.routes')
 // const usersRoutes=require('./routes/users.routes')
-// const studentRoutes=require('./routes/student.routes')
+const studentRoutes=require('./routes/student.routes')
 app.use('/role',roleRoutes)
-// app.use('/department',departmentRoutes)
+app.use('/department',departmentRoutes)
 // app.use('/user', usersRoutes)
-// app.use('/student', studentRoutes)
+app.use('/student', studentRoutes)
+
+// const Department = require('./model/department.model')
+
 
 sequelize.sync()
     .then(res => {

@@ -1,88 +1,82 @@
-const { success, mistake, validation } = require("../utils/responses");
-const pg = require('../utils/pgdb')
+const Department = require('../model/department.model')
+const { validationResult } = require('express-validator/check');
 
-exports.addDepartment = (req, res) => {
-
-    const { departmentname } = req.body
-    pg.query('insert into department (departmentname) values($1)', [departmentname], (error, result) => {
-
-        if (error) {
-            throw error
-        } else {
-            res.status(200).json(success("Department Added", { departmentname }, res.status))
+const addDepartment = (req, res) => {
+    try {
+        const error = validationResult(req);
+        if(!error.isEmpty()){
+            res.json({ msg: error.array()[0].msg })
+        }else{
+            Department.create({
+                departmentname: req.body.departmentname
+            }).then(dept => {
+                res.json({ msg: "Department Created..." })
+            }).catch(err => res.json({ msg: err }))
         }
-    })
-
-}
-
-exports.getDepartment = (req, res) => {
-
-    try {
-        pg.query('select * from department', (error, result) => {
-            if (error) {
-                throw error
-            } else {
-                res.status(200).json(success("List of department", { data: result.rows }, res.status))
-            }
-        })
-
-    } catch (error) {
-        throw error
-    }
-}
-
-exports.getDepartmentByID = async (req, res) => {
-
-    try {
-        const departmentid = parseInt(req.params.departmentid)
-
-        pg.query('select * from department where departmentid = $1', [departmentid], (error, result) => {
-
-            if (result.rows.length != 0) {
-                res.status(200).json(success("Department ById", result.rows, res.statusCode))
-            } else {
-                res.status(400).json(mistake("No Data Found", res.statusCode))
-            }
-        })
-    } catch (error) {
-        throw error
-    }
-}
-
-exports.updateDepartment=async(req,res)=>{
-    try{
-        const departmentid= parseInt(req.body.departmentid);
         
-        const{departmentname}=req.body
-        pg.query('update department set departmentname=$1 where departmentid=$2',[departmentname,departmentid],(error,result)=>{
-            if(error){
-                throw error;
-            }else{
-                res.status(200).json(success("Department Updated Successfully",{departmentname,departmentid},res.statusCode));
-            }
-        })
-    }catch(error){
-
-        return error;
-
+    } catch (err) {
+        throw err;
     }
 }
 
-exports.deleteDepartment = (req, res) => {
-
-    const departmentid = parseInt(req.params.departmentid)
-
-    try {
-        pg.query('delete from department where departmentid = $1', [departmentid], (error, result) => {
-            if (error) {
-                throw error
-            } else {
-                res.status(200).json(success("Department Deleted", { data: result.rows }, res.status))
-            }
+const getDepartment = (req,res) => {
+    try{
+        Department.findAll().then(depts => {
+            res.send(depts)
+        }).catch(err => {
+            throw err;
         })
-
-    } catch (error) {
-        throw error
+    } catch(err) {
+        throw err;
     }
+}
 
+const getDepartmentById = (req,res) => {
+    try{
+        const id = parseInt(req.params.id);
+        // console.log("id:",id);
+        Department.findOne({where:{departmentid:id}}).then(result => {
+            res.send(result)
+        }).catch(err => {
+            throw err;
+        })
+    }catch(err) {
+        throw err;
+    }
+}
+
+const updateDepartment = (req, res) => {
+    try{
+        Department.update({
+            departmentname:req.body.departmentname
+        },{
+            where:{departmentid:req.body.departmentid}
+        }).then(result => { 
+            res.send(result)
+        }).catch(err => {
+            throw err;
+        })
+    }catch(err) {
+        throw err;
+    }
+}
+
+
+const deleteDepartment = (req,res) => {
+    try {
+        const id = parseInt(req.params.id);
+        Department.destroy({ where: { departmentid: id } }).then(result => {
+          res.send("deleted Successfully !!! ")
+        })
+    } catch (err) {
+        throw err;
+    }
+}
+
+module.exports = {
+    addDepartment,
+    getDepartment,
+    getDepartmentById,
+    updateDepartment,
+    deleteDepartment
 }

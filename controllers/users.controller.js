@@ -1,118 +1,108 @@
-const { success, error, validation } = require("../utils/responses");
-const pg = require('../utils/pgdb')
-var bcrypt = require('bcrypt');
+const User = require('../model/user.model');
+const bcrypt = require('bcrypt');
 
-//? User Signup
-exports.userSignup = async (req, res) => {
-
-    try {
-        const password = await bcrypt.hash(req.body.password, 10);
-        const { fullname, phoneno, birthdate, gender, email, address, cityid, pincode, roleid, status, departmentid } = req.body;
-
-        pg.query('insert into users(fullname,phoneno,birthdate,gender,email,password,address,cityid,pincode,roleid,status,departmentid) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)', [fullname, phoneno, birthdate, gender, email, password, address, cityid, pincode, roleid, status, departmentid], (error, result) => {
-
-            if (error) {
-                throw error;
-            } else {
-                res.status(200).json(success("user Signup sucesffuly", { fullname, phoneno, birthdate, gender, email, password, address, cityid, pincode, roleid, status, departmentid }, res.statusCode));
-            }
-        })
-    } catch (error) {
-        return error;
-    }
-}
-
-//? List Users
-exports.usersList = async (req, res) => {
-
-    try {
-
-        pg.query('select * from users', (error, result) => {
-
-            if (error) {
-                throw error;
-            } else {
-                res.status(200).json(success("List of users", { data: result.rows }, res.statusCode));
-            }
-        })
-    } catch (error) {
-        return error;
-    }
-}
-
-//? Get User by id
-exports.GetUserById = async (req, res) => {
-
-    try {
-        const userid = parseInt(req.params.userid)
-
-        pg.query('select * from users where userid = $1', [userid], (error, result) => {
-
-            if (result.rows.length != 0) {
-                res.status(200).json(success("Users ById", result.rows, res.statusCode))
-            } else {
-                res.status(400).json(mistake("No Data Found", res.statusCode))
-            }
-        })
-    } catch (error) {
-        return error;
-    }
-}
-
-//? User Update
-exports.userUpdate = async (req, res) => {
-
-    try {
-        const userid = parseInt(req.body.userid);
-        const password = await bcrypt.hash(req.body.password, 10);
-        const { fullname, phoneno, birthdate, gender, email, address, cityid, pincode, roleid, status, departmentid } = req.body;
-
-        pg.query('update users set fullname=$1,phoneno=$2,birthdate=$3,gender=$4,email=$5,password=$6,address=$7,cityid=$8,pincode=$9,roleid=$10,status=$11,departmentid=$12 where userid=$13', [fullname, phoneno, birthdate, gender, email, password, address, cityid, pincode, roleid, status, departmentid, userid], (error, result) => {
-
-            if (error) {
-                throw error;
-            } else {
-                res.status(200).json(success("user Updated sucesffuly", { fullname, phoneno, birthdate, gender, email, password, address, cityid, pincode, roleid, status, departmentid, userid }, res.statusCode));
-            }
-        })
-    } catch (error) {
-        return error;
-    }
-}
-
-//? Delete User by id
-exports.deleteUser = async (req, res) => {
-
-    try {
-        const userid = parseInt(req.params.userid)
-
-        pg.query('delete from users where userid = $1', [userid], (error, result) => {
-
-            if (error) {
-                throw error;
-            } else {
-                res.status(200).json(success("user Deleted sucesffuly", { userid }, res.statusCode));
-            }
-        })
-    } catch (error) {
-        return error;
-    }
-}
-
-//? userLogin 
-exports.userLogin = async (req, res) => {
-    const users = await pg.query("select * from users where email=$1", [req.body.email])
-
-    if (users.rows.length <= 0) {
-        return res.status(401).json(error(users.rows[0].fullname + " Login Successfully", users.rows, res.statusCode))
-    } else {
-
-        if (await bcrypt.compare(req.body.password, users.rows[0].password)) {
-
-            return res.status(200).json(success("Welcome " + users.rows[0].fullname + " !", users.rows, res.statusCode))
-        } else {
-            return res.status(201).json(error(" Wrong Credential", users.rows, res.statusCode))
+const addUser = async (req,res) => {
+    try{
+        const {fullname, phoneno, email, password, address, pincode}  = req.body
+        const user = await User.findOne({where:{email:email}})
+        if(user){
+            res.json("Email Already Registered");
+        }else{
+            User.create({
+                fullname:fullname,
+                phoneno:phoneno,
+                email:email,
+                password:await bcrypt.hash(password, 10),
+                address:address,
+                pincode:pincode
+            }).then((result) => {
+               res.send(result) 
+            }).catch((err) => {
+                throw err;
+            });
         }
+       
+    }catch(err) {
+        throw err;
     }
+}
 
+const getUser = (req,res) => {
+    try{
+        User.findAll({where:{isdeleted:0}}).then((result) => {
+            res.send(result)
+        }).catch((err) => {
+            throw err;
+        });
+    }catch(err) {
+        throw err;
+    }
+}
+
+const getUserById = (req,res) => {
+    try{
+        
+        const id = parseInt(req.params.id);
+        User.findOne({where:{userid:id,isdeleted:0}}).then((result) => {
+            res.send(result)
+        }).catch((err) => {
+            throw err;
+        });
+    }catch(err){
+        throw err;
+    }
+}
+
+const updateUser = async (req, res) => {
+
+    try {
+        const {userid,fullname, phoneno, email, password, address, pincode}  = req.body
+        await User.update({
+            fullname:fullname,
+            phoneno:phoneno,
+            email:email,
+            password:await bcrypt.hash(password, 10),
+            address:address,
+            pincode:pincode
+        },
+            {
+                where: {
+                    userid: userid
+                }
+
+            }).then(user => {
+                    res.send(user)
+            }).catch(err => {
+                throw err;
+            })
+
+    } catch (err) {
+        throw err;
+    }
+}
+
+const deleteUser = (req, res) => {
+    try {
+        User.update({
+            isdeleted:1
+        },
+            {
+                where: {userid: req.body.userid}}).then(user => {
+                    res.send(user)
+
+            }).catch(err => {
+                throw err;
+            })
+    } catch (err) {
+        throw err;
+    }
+}
+
+
+module.exports = {
+    addUser,
+    getUser,
+    getUserById,
+    updateUser,
+    deleteUser
 }
